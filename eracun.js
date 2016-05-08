@@ -176,7 +176,7 @@ streznik.post('/izpisiRacunBaza', function(zahteva, odgovor) {
         odgovor.render("eslog", {
           vizualiziraj: true,
           postavkeRacuna: pesmi,
-          naziv: partner[0]
+          naziv: partner
         });
       });
     });
@@ -204,7 +204,7 @@ streznik.get('/izpisiRacun/:oblika', function(zahteva, odgovor) {
             odgovor.render('eslog', {
               vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
               postavkeRacuna: pesmi,
-              naziv: vrstice[i]
+              naziv: vrstice
             });
           } 
         }  
