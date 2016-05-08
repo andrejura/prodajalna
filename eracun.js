@@ -148,7 +148,7 @@ var strankaIzRacuna = function(racunId, callback) {
 
 // Izpis računa v HTML predstavitvi na podlagi podatkov iz baze
 streznik.post('/izpisiRacunBaza', function(zahteva, odgovor) {
-  odgovor.end();
+
 })
 
 // Izpis računa v HTML predstavitvi ali izvorni XML obliki
@@ -160,19 +160,35 @@ streznik.get('/izpisiRacun/:oblika', function(zahteva, odgovor) {
       odgovor.send("<p>V košarici nimate nobene pesmi, \
         zato računa ni mogoče pripraviti!</p>");
     } else {
-      odgovor.setHeader('content-type', 'text/xml');
-      odgovor.render('eslog', {
-        vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
-        postavkeRacuna: pesmi
-      })  
-    }
-  })
-})
+      strankaRacun(zahteva.session.strankaRac, function(napaka, vrstice) {
+        for (var i = 0; i < vrstice.length; i++) {
+          if (napaka) {
+            odgovor.end();
+          }
+          else {
+            odgovor.setHeader('content-type', 'text/xml');
+            odgovor.render('eslog', {
+              vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
+              postavkeRacuna: pesmi,
+              naziv: vrstice[i]
+            });
+          } 
+        }  
+      });
+    }    
+  });
+});
 
 // Privzeto izpiši račun v HTML obliki
 streznik.get('/izpisiRacun', function(zahteva, odgovor) {
-  odgovor.redirect('/izpisiRacun/html')
-})
+  odgovor.redirect('/izpisiRacun/html');
+});
+
+var strankaRacun = function(strankaRac, callback) {
+  pb.all('SELECT * FROM Customer WHERE Customer.CustomerId = '+ strankaRac, function(napaka, vrstice) {
+    callback(napaka, vrstice);
+  });
+};
 
 // Vrni stranke iz podatkovne baze
 var vrniStranke = function(callback) {
@@ -233,12 +249,14 @@ streznik.post('/stranka', function(zahteva, odgovor) {
   var form = new formidable.IncomingForm();
   
   form.parse(zahteva, function (napaka1, polja, datoteke) {
+    zahteva.session.strankaRac = polja.seznamStrank;
     odgovor.redirect('/')
   });
 })
 
 // Odjava stranke
 streznik.post('/odjava', function(zahteva, odgovor) {
+    zahteva.session.destroy();
     odgovor.redirect('/prijava') 
 })
 
